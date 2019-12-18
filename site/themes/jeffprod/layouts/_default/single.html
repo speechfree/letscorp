@@ -1,0 +1,15 @@
+{{ define "main" }}
+
+<div class="columns">
+    <div class="column is-12">
+        <div class="tile is-child box">
+            {{ partial "tags.html" .}}
+            <div class="content">
+                {{ .Content }}
+            </div>
+            {{ template "_internal/disqus.html" . }}
+        </div>
+    </div>
+</div>
+
+{{ end }}

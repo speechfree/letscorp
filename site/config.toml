@@ -1,0 +1,72 @@
+baseURL = "https://speechfree.github.io/xys/"
+site_url = "https://speechfree.github.io/xys/"
+relativeURLs = true
+languageCode = "zh-cn"
+title = "中国文化大革命文库 The Chinese Cultural Revolution Database"
+auth = "中国文化大革命文库 The Chinese Cultural Revolution Database"
+description = "中国文化大革命文库"
+theme = "jeffprod"
+copyright = "Copyright © 中国文化大革命文库"
+enableRobotsTXT = true
+disableAliases = true
+googleAnalytics = "UA-151212685-3"
+summaryLength = 50
+media_folder = "/site/static/images/uploads"
+public_folder = "/static/images/uploads"
+
+[params]
+  DEPLOY_PRIME_URL = "https://speechfree.github.io/xys/"
+
+[outputs]
+home = ["HTML", "RSS", "REDIRECTS", "HEADERS"]
+
+[permalinks]
+    post = "/post/:filename"
+
+[taxonomies]
+    tag = "tags"
+    archive = "archives"
+
+[mediaTypes."text/netlify"]
+suffixes = [""]
+delimiter = ""
+
+# add output format for netlify _redirects
+[outputFormats.REDIRECTS]
+mediatype = "text/netlify"
+baseName = "_redirects"
+isPlainText = true
+notAlternative = true
+
+# add output format for netlify _headers
+[outputFormats.HEADERS]
+mediatype = "text/netlify"
+baseName = "_headers"
+isPlainText = true
+notAlternative = true
+
+[[menu.main]]
+URL = "list"
+name = "list"
+weight = 2
+
+
+########################## Plugings ######################################
+
+# css plugins
+[[params.plugins.css]]
+URL = "plugins/bootstrap/bootstrap.min.css"
+[[params.plugins.css]]
+URL = "plugins/themify-icons/themify-icons.css"
+
+# js plugins
+[[params.plugins.js]]
+URL = "plugins/jQuery/jquery.min.js"
+[[params.plugins.js]]
+URL = "plugins/bootstrap/bootstrap.min.js"
+[[params.plugins.js]]
+URL = "plugins/search/fuse.min.js"
+[[params.plugins.js]]
+URL = "plugins/search/mark.js"
+[[params.plugins.js]]
+URL = "plugins/search/search.js"
