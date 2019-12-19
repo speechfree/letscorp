@@ -1,7 +1,7 @@
-## 新语丝
+## 墙外楼
 
-新语丝镜像站
+墙外楼镜像站
 
 ## 网站
 
- [Github Pages](https://speechfree.github.io/xys/)
+ [Github Pages](https://speechfree.github.io/letscorp/)
