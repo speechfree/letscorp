@@ -1,21 +1,21 @@
-baseURL = "https://speechfree.github.io/xys/"
-site_url = "https://speechfree.github.io/xys/"
+baseURL = "https://speechfree.github.io/letscorp/"
+site_url = "https://speechfree.github.io/letscorp/"
 relativeURLs = true
 languageCode = "zh-cn"
-title = "新语丝"
-auth = "新语丝"
-description = "新语丝"
+title = "墙外楼"
+auth = "墙外楼"
+description = "网络热门话题追踪"
 theme = "jeffprod"
-copyright = "Copyright © 新语丝"
+copyright = "Copyright © 墙外楼"
 enableRobotsTXT = true
 disableAliases = true
-googleAnalytics = "UA-151212685-4"
+googleAnalytics = "UA-151212685-5"
 summaryLength = 50
 media_folder = "/site/static/images/uploads"
 public_folder = "/static/images/uploads"
 
 [params]
-  DEPLOY_PRIME_URL = "https://speechfree.github.io/xys/"
+  DEPLOY_PRIME_URL = "https://speechfree.github.io/letscorp/"
 
 [outputs]
 home = ["HTML", "RSS", "REDIRECTS", "HEADERS"]
