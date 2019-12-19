@@ -1,0 +1,24 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>墙外楼</title>
+    <link>https://speechfree.github.io/letscorp/https://speechfree.github.io/letscorp/</link>
+    <description>Recent content on 墙外楼</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>Copyright © 墙外楼</copyright>
+    <lastBuildDate>Thu, 06 Dec 2018 16:21:26 +0000</lastBuildDate>
+    
+        <atom:link href="https://speechfree.github.io/letscorp/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Posts</title>
+      <link>https://speechfree.github.io/letscorp/https://speechfree.github.io/letscorp/post/</link>
+      <pubDate>Thu, 06 Dec 2018 16:21:26 +0000</pubDate>
+      
+      <guid>https://speechfree.github.io/letscorp/post/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

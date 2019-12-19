@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="../../post/index.xml">
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@SpeechFreedomCN">
+    <meta name="twitter:creator" content="@SpeechFreedomCN">
+    <meta name="og:title" content=" 俄亥俄州立大学计算机安全实验室：CPU乱序执行和预测执行导致的安全问题 | 墙外楼 " />
+    <meta name="og:description" content="张殷乾 林志强
+俄亥俄州立大学计算机安全实验室
+乱序执行(Out-of-Order Execution) [1] 和预测执行(Speculative Execution) [2] 是现代CPU为了提高性能通常采用的优化方式。乱序就是指CPU不按照程序严格规定的先后顺序执行，预测就是CPU基于先有经验预先执行了后续可能执行的代码。传统观念认为，由于CPU在运行过程中会丢弃乱序执行和预测执行所导致的不正确的运算结果，所以乱序执行和预测执行不会对程序的正确性和安全性造成任何影响。然而，最新的发现表明攻击者完全可以利用这两种CPU特性进行侧信道攻击。目前已知的Meltdown攻击和Spectre攻击就是两个典型的攻击实例 [3]。
+从本质上来讲，这两种攻击都属于基于CPU缓存(cache)的侧信道攻击的范畴。这种侧信道攻击在最近十年国外的计算机安全研究领域非常流行。它们的基本假设是攻击者在目标主机上拥有一定的执行权限（比如操作系统的一个普通进程，云计算中的一个虚拟主机，或者浏览器中的一段JavaScript代码），然后通过控制自己内存空间的数据（例如读取等等）来间接的控制CPU缓存。由于CPU缓存是攻击者和目标主机上的目标程序共享的，这种对缓存的间接控制可以被攻击者用来推测目标程序的行为。举个例子来说，如果攻击者和目标程序共享物理内存（比如同一个操作系统的两个程序往往共享同一个动态链接库），攻击者可以反复的利用CPU指令把这块内存的某个地址清除出CPU缓存（Flush阶段），然后在一定的时间间隔后读取这个地址上的内存数据并且测量读取的时间（Reload阶段）。通过这种方式，攻击者可以清楚的知道该地址是否被目标程序读取过，因为一旦目标程序读取该地址，其对应的内存会被导入CPU缓存，从而使得攻击者自己对这个地址的访问变快（由于从缓存读取要远远快于内存）。这种攻击方式被称为Flush&#43;Reload [6]攻击。此外CPU缓存侧信道还有Evict&#43;Time [7]， Prime&#43;Probe [8] 等攻击方式。
+然而，以往的侧信道攻击针对的目标是被攻击者内存读取的模式，例如某条指令是否被执行或者某个数据是否被访问，而不能直接读取被攻击者的内存。而Meltdown攻击[4] 和Spectre攻击[5] 的目标是越权的内存读取，比如读取（dump）整个内核的内存数据。这就使得这种侧信道攻击的后果更加严重。这也是为什么这个CPU漏洞会被媒体大肆渲染。下面我们就对这两种攻击的基本形式和本质做一下介绍。
+Meltdown攻击
+Meltdown攻击利用现代CPU中乱序执行 （out-of-order execution）的特性，彻底攻破原本由硬件保证的内存隔离，使得一个仅仅具有普通进程权限的攻击者可以用简单的方法来读取内核内存。应该强调一点，Meltdown攻击不是针对KASLR[9]的攻击。攻击KALSR相对要简单很多，因为它的目标仅是获取内核内存的虚拟地址，而Meltdown的攻击目标是获取内核内存的内容。
+Meltdown攻击的本质是利用CPU进行的安全检查和乱序执行之间的race condition，给攻击者创造一个很短的攻击窗口。乱序执行是指当CPU中的某些指令需要等待某些资源，比如内存读取时，CPU不会在当前指令停止，而是利用空闲的计算能力继续执行后续的指令。这大大地增加了计算能力的利用率，从而提升了CPU性能。在支持乱序执行的CPU上，指令的执行并不是顺序进行的。比如后面的指令可能在前面指令执行结束之前就开始执行。然而，为了保证程序的正确性，指令退休（retirement）必须是顺序进行的，而CPU的安全检查是在指令退休时才会进行。这样的结果是，在CPU对某一条指令进行安全检查之前，一部分在该指令后面的指令会由于CPU的乱序执行而被提前执行。例如，一条用户空间的指令访问内核内存会导致CPU抛出异常，然而该异常只有在这条指令退休的时候才会被CPU处理，而由于乱序执行而被提前执行的指令会被CPU丢弃。由于CPU保证程序的正确性，乱序执行本不会产生安全隐患。然而，由于乱序执行的指令对缓存的操作在这些指令被丢弃时不会被重置，攻击者就可以通过缓存侧信道的方式来获取这些乱序执行的信息，从而导致了Meltdown攻击。本质上，Spectre攻击的原理也是一样的。我们会在后面介绍。
+以下是一个简化的Meltdown攻击的基本指令：
+1 ; rcx = kernel address
+2 ; rbx = probe array
+3 mov al, byte [rcx]
+4 shl rax, 0xc
+5 mov rbx, qword [rbx &#43; rax]" />
+    <meta name="og:image"
+        content="https://opvlbqxurl.execute-api.ap-northeast-2.amazonaws.com/prod/random?keyword=programming&slug=俄亥俄州立大学计算机安全实验室：CPU乱序执行和预测执行导致的安全问题" />
+    <title> 俄亥俄州立大学计算机安全实验室：CPU乱序执行和预测执行导致的安全问题 | 墙外楼</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/css/blog.css" />
+    
+    <!-- plugins -->
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/bootstrap/bootstrap.min.css ">
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/themify-icons/themify-icons.css ">
+    
+
+</head>
+
+<body>
+
+    
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/">Home</a>
+        </div>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/post/index.xml">RSS</a>
+        </div>
+    </nav>
+    
+
+    
+    <section class="hero is-info is-medium">
+        <div class="hero-body" style="background-image: url(https://speechfree.github.io/letscorp/img/bg-blog.jpg);">
+            <div class="container has-text-centered">
+                <br>
+                <h1 class="title is-size-1">
+                    
+                    俄亥俄州立大学计算机安全实验室：CPU乱序执行和预测执行导致的安全问题
+                    
+                </h1>
+                
+            </div>
+        </div>
+    </section>
+
+<div class="container">
+    <div class="section">
+    
+
+<div class="columns">
+    <div class="column is-12">
+        <div class="tile is-child box">
+            
+
+            <div class="content">
+                <p>张殷乾 林志强</p>
+
+<p>俄亥俄州立大学计算机安全实验室</p>
+
+<p>乱序执行(Out-of-Order Execution) [1] 和预测执行(Speculative Execution) [2] 是现代CPU为了提高性能通常采用的优化方式。乱序就是指CPU不按照程序严格规定的先后顺序执行，预测就是CPU基于先有经验预先执行了后续可能执行的代码。传统观念认为，由于CPU在运行过程中会丢弃乱序执行和预测执行所导致的不正确的运算结果，所以乱序执行和预测执行不会对程序的正确性和安全性造成任何影响。然而，最新的发现表明攻击者完全可以利用这两种CPU特性进行侧信道攻击。目前已知的Meltdown攻击和Spectre攻击就是两个典型的攻击实例 [3]。</p>
+
+<p>从本质上来讲，这两种攻击都属于基于CPU缓存(cache)的侧信道攻击的范畴。这种侧信道攻击在最近十年国外的计算机安全研究领域非常流行。它们的基本假设是攻击者在目标主机上拥有一定的执行权限（比如操作系统的一个普通进程，云计算中的一个虚拟主机，或者浏览器中的一段JavaScript代码），然后通过控制自己内存空间的数据（例如读取等等）来间接的控制CPU缓存。由于CPU缓存是攻击者和目标主机上的目标程序共享的，这种对缓存的间接控制可以被攻击者用来推测目标程序的行为。举个例子来说，如果攻击者和目标程序共享物理内存（比如同一个操作系统的两个程序往往共享同一个动态链接库），攻击者可以反复的利用CPU指令把这块内存的某个地址清除出CPU缓存（Flush阶段），然后在一定的时间间隔后读取这个地址上的内存数据并且测量读取的时间（Reload阶段）。通过这种方式，攻击者可以清楚的知道该地址是否被目标程序读取过，因为一旦目标程序读取该地址，其对应的内存会被导入CPU缓存，从而使得攻击者自己对这个地址的访问变快（由于从缓存读取要远远快于内存）。这种攻击方式被称为Flush+Reload [6]攻击。此外CPU缓存侧信道还有Evict+Time [7]， Prime+Probe [8] 等攻击方式。</p>
+
+<p>然而，以往的侧信道攻击针对的目标是被攻击者内存读取的模式，例如某条指令是否被执行或者某个数据是否被访问，而不能直接读取被攻击者的内存。而Meltdown攻击[4] 和Spectre攻击[5] 的目标是越权的内存读取，比如读取（dump）整个内核的内存数据。这就使得这种侧信道攻击的后果更加严重。这也是为什么这个CPU漏洞会被媒体大肆渲染。下面我们就对这两种攻击的基本形式和本质做一下介绍。</p>
+
+<p>Meltdown攻击</p>
+
+<p>Meltdown攻击利用现代CPU中乱序执行 （out-of-order execution）的特性，彻底攻破原本由硬件保证的内存隔离，使得一个仅仅具有普通进程权限的攻击者可以用简单的方法来读取内核内存。应该强调一点，Meltdown攻击不是针对KASLR[9]的攻击。攻击KALSR相对要简单很多，因为它的目标仅是获取内核内存的虚拟地址，而Meltdown的攻击目标是获取内核内存的内容。</p>
+
+<p>Meltdown攻击的本质是利用CPU进行的安全检查和乱序执行之间的race condition，给攻击者创造一个很短的攻击窗口。乱序执行是指当CPU中的某些指令需要等待某些资源，比如内存读取时，CPU不会在当前指令停止，而是利用空闲的计算能力继续执行后续的指令。这大大地增加了计算能力的利用率，从而提升了CPU性能。在支持乱序执行的CPU上，指令的执行并不是顺序进行的。比如后面的指令可能在前面指令执行结束之前就开始执行。然而，为了保证程序的正确性，指令退休（retirement）必须是顺序进行的，而CPU的安全检查是在指令退休时才会进行。这样的结果是，在CPU对某一条指令进行安全检查之前，一部分在该指令后面的指令会由于CPU的乱序执行而被提前执行。例如，一条用户空间的指令访问内核内存会导致CPU抛出异常，然而该异常只有在这条指令退休的时候才会被CPU处理，而由于乱序执行而被提前执行的指令会被CPU丢弃。由于CPU保证程序的正确性，乱序执行本不会产生安全隐患。然而，由于乱序执行的指令对缓存的操作在这些指令被丢弃时不会被重置，攻击者就可以通过缓存侧信道的方式来获取这些乱序执行的信息，从而导致了Meltdown攻击。本质上，Spectre攻击的原理也是一样的。我们会在后面介绍。</p>
+
+<p>以下是一个简化的Meltdown攻击的基本指令：</p>
+
+<p>1  ; rcx = kernel address</p>
+
+<p>2  ; rbx = probe array</p>
+
+<p>3  mov al, byte [rcx]</p>
+
+<p>4  shl rax, 0xc</p>
+
+<p>5  mov rbx, qword [rbx + rax]</p>
+
+<p>首先，在指令3中一个具有用户级权限的攻击者访问目标内核内存地址（存储在寄存器rcx中）。由于访问了内核地址，这一条指令将会触发异常，使得它和它之后的指令对寄存器的修改将被全部丢弃。但是在等待CPU完成执行该指令的同时，后两条指令因为乱序执行实际上已经被执行过了，并且此时的计算是根据指令3所读取到的数据所进行，并不受CPU权限限制。指令4将会把这个数据乘以4096，并在指令5中将其作为offset来对数组probe array进行访问。由于一个内存页的大小是4KB，不同的数据将会导致不同的内存页被访问并存放到CPU缓存中。此后，另一个攻击者进程就可以通过缓存侧信道攻击，来了解哪个内存页被访问过了，从而推断出被访问的内核内存数据。</p>
+
+<p>具体的缓存攻击方式有Flush+Reload [6]，Evict+Time [7]，或者Prime+Probe [8]。在Meltdown这个场景中（数组probe array是在攻击者自己的内存空间的），比较简单而且有效的攻击方法是Flush+Reload，前面已经描述过其基本思想。简单的讲，Flush+Reload攻击首先把probe array的相对应的内存用clflush指令清除出CPU缓存，然后在执行了上述攻击代码后再逐一访问probe array的各个内存页并记录访问时间。访问时间短说明上述代码执行过程中CPU已经把对应的内存页加载到缓存中了，原因是这个内存页对应的offset正好是内核空间中rcx指向的内存内容。</p>
+
+<p>总的来说，Meltdown攻击的指令由两部分组成：第一部分利用乱序执行来访问受限内存，第二部分根据所读取到的数值再编码到内存的访问，并通过缓存侧信道提取信息。攻击的关键在于，乱序执行的这两条指令必须在读取内核内存的指令退休之前，也就是权限审核之前，执行完毕。另外，由于访问受限内存会导致操作系统抛出异常，攻击者可以通过hardware transaction memory等方式抑制异常[11]或者用其他方式处理异常[4]，从而反复不间断的对受限内存进行遍历访问。</p>
+
+<p>Spectre攻击</p>
+
+<p>Spectre攻击利用了CPU的预测执行对系统进行攻击。预测执行是另外一种CPU优化特性。在分支指令执行时，由于分支指令执行可能需要内存读取（上百个CPU周期），在分支指令执行结束之前，CPU会预测哪一个分支会被运行，提取相应的指令代码并执行，以提高CPU指令流水线的性能。CPU的预测执行是通过分支预测单元(BPU)进行的。简单的理解，BPU储存了某个分支指令最近执行过的分支跳转的结果。CPU的预测执行遇到分支指令时，会根据BPU的预测结果进行跳转。当预测执行发现预测错误时，预测执行的结果将会被丢弃，CPU的状态会被重置。然而，与乱序执行类似，预测执行对CPU缓存的影响会被保留。Spectre和Meltdown攻击在这一点上比较类似。</p>
+
+<p>Spectre攻击主要分为三个阶段：</p>
+
+<p>准备阶段: 在这一阶段，攻击者通过一些操作来训练CPU的BPU，以使其在运行目标代码时会进行特定的预测执行。同时，攻击者可以执行一些操作来提高预测执行发生的机率，比如把条件判断所需的数据挤出缓存，这样执行分支指令的时间会加长。另外，攻击者也可以在这一阶段做好侧信道的准备工作，比如Flush+Reload攻击中的Flush部分。</p>
+
+<p>攻击阶段：攻击者利用CPU的预测执行把目标的机密数据转移到微架构侧信道中。具体的攻击方法我们下面详细描述。</p>
+
+<p>机密数据提取阶段： 通过测量Flush+Reload或其他缓存攻击的方法中Reload内存时间，攻击者可以从缓存侧信道中提取出目标机密数据。这一点跟Meltdown攻击十分相似。</p>
+
+<p>在攻击阶段，攻击者利用CPU的预测执行把目标的机密数据转移到微架构侧信道中。常见的分支指令包括条件分支指令和间接分支指令。所以相对的Spectre攻击也有两种不同的方式。其主要的思想是，攻击者通过控制目标程序的某个变量或者寄存器，使其读取攻击者指定的内存地址。这里攻击者指定的内存地址的内容就是攻击者试图获取的机密数据（比如用户密码）。如果目标程序中含有将这个机密数据作为内存访问的指针或者数组offset，那么攻击者就可以利用缓存侧信道来提取被访问的内存地址，进而提取目标机密数据。</p>
+
+<p>攻击的危害</p>
+
+<p>本质上讲Meltdown和Spectra都是基于侧信道的攻击，主要用于信息泄露，并不能对目标内存地址进行任意修改。Meltdown攻击往往用于攻击者代码由于权限的限制而不能任意读取其所在的内存地址空间的情况。比如在操作系统中内核内存会被映射到所有普通进程的地址空间，尽管普通进程可以通过虚拟地址访问所有受限内存，包括内核的地址空间，直接访问内核地址会抛出异常而终止。而Meltdown攻击可以帮助攻击者完成这样的操作。在云计算的虚拟机架构上也有类似的问题，使得虚拟机可以通过Meltdown攻击任意读取云服务器宿主机(host)虚拟机管理程序(VMM)的内存地址。而Spectra攻击则利用目标程序的特殊结构，通过系统调用或者函数调用的方式控制其中的某个变量来达到泄漏目标程序（或内核）地址空间中内存内容的目的。比如文献[5]提出了JavaScript代码访问整个浏览器进程内存的方法。而文献[10]提出了利用内核即时编译(Just-in-time compilation)的特性进行提权攻击，正是由于即时编译出得代码具有Spectra攻击所需要的特殊结构。</p>
+
+<p>Meltdown攻击所攻击的并不是软件漏洞，而是CPU设计本身的安全缺陷。所以Meltdown攻击适用广泛，后果严重。它已经被证明在2010年后发布的Intel桌面及服务器CPU架构上全部可行。实验证明个人计算机和云服务器全都会受到影响，而被成功攻破的操作系统包括Linux，MS Windows，以及包含Docker，LXC，和OpenVZ在内的container。在ARM和AMD处理器上，尽管Meltdown攻击所依赖的硬件漏洞同样被证实存在，目前尚无完整的攻击。可能的原因包括指令执行过慢，CPU的流水线(Pipeline)过短等等。相比之下，Spectre攻击需要目标程序具有特殊结构，所以受到目标软件的限制。如果目标程序不具有该特殊结构，那么Spectre攻击就很难进行。但是相对于Meltdown攻击目前仅限于Intel处理器上，Spectre攻击适用于Intel，AMD，ARM等众多处理器上。</p>
+
+<p>漏洞的防御</p>
+
+<p>虽然Meltdown和Spectre是CPU漏洞，短时间内很难通过CPU升级来修补漏洞。目前对Meltdown的主要防御手段是以软件完全隔离用户态和内核态来实现，虽然有分析称这样程序的性能可能会大幅下降。而Spectra的防御就更加困难，借助编译器做程序分析，添加顺序执行指令（比如lfence，cpuid）是一种可能的方案。我们也会继续跟踪重要厂商对漏洞的修补，并对这些修补方式进行测试。我们实验室也会研究和开发其他安全技术对这些攻击进行防范。</p>
+
+<p>对于一般用户，只要不被执行恶意代码，比如不去访问恶意网站，就不会有不可信代码进入内存执行，就不会被Spectra和Meltdown攻击。所以个人用户还是可以利用已有的防御手段（比如恶意网站拦截）对自己进行保护。同时也应该及时关注系统软件厂商，比如操作系统厂商和浏览器厂商的补丁并且随时更新。</p>
+
+<p>对于在云端，由于攻击者可以租借虚拟环境来执行攻击者想执行的任何代码，所以攻击者可以利用它们去从虚拟机用户态读宿主机的内核态以及虚拟态的关键数据，从而可以攻击其他虚拟机。所以云厂商有责任在第一时间对这些CPU漏洞进行软件修补。企业用户应该采取积极的态度配合或者推动漏洞的控制。</p>
+
+<p>作者简介</p>
+
+<p>张殷乾：俄亥俄州立大学助理教授，主要研究方向侧信道安全和云计算安全。</p>
+
+<p>林志强：俄亥俄州立大学副教授，主要研究方向虚拟化安全和软件安全。</p>
+
+<p>参考文献</p>
+
+<p>[1] <a href="https://en.wikipedia.org/wiki/Out-of-order_execution">https://en.wikipedia.org/wiki/Out-of-order_execution</a></p>
+
+<p>[2] <a href="https://en.wikipedia.org/wiki/Speculative_execution">https://en.wikipedia.org/wiki/Speculative_execution</a></p>
+
+<p>[3] <a href="https://meltdownattack.com/">https://meltdownattack.com/</a></p>
+
+<p>[4] <a href="https://meltdownattack.com/meltdown.pdf">https://meltdownattack.com/meltdown.pdf</a></p>
+
+<p>[5] <a href="https://spectreattack.com/spectre.pdf">https://spectreattack.com/spectre.pdf</a></p>
+
+<p>[6] <a href="https://www.usenix.org/node/184416">https://www.usenix.org/node/184416</a></p>
+
+<p>[7] <a href="https://dl.acm.org/citation.cfm?id=2725064">https://dl.acm.org/citation.cfm?id=2725064</a></p>
+
+<p>[8] <a href="http://palms.ee.princeton.edu/system/files/SP_vfinal.pdf">http://palms.ee.princeton.edu/system/files/SP_vfinal.pdf</a></p>
+
+<p>[9] <a href="https://lwn.net/Articles/569635/">https://lwn.net/Articles/569635/</a></p>
+
+<p>[10] <a href="https://googleprojectzero.blogspot.com/">https://googleprojectzero.blogspot.com/</a></p>
+
+<p>[11] <a href="https://dl.acm.org/citation.cfm?id=2978321">https://dl.acm.org/citation.cfm?id=2978321</a></p>
+
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+    </div>
+</div>
+
+<footer class="footer has-background-grey-darker has-text-white">
+    <div class="content has-text-centered">
+        <p>
+            <br><br>
+            <br><br>
+            Copyright &copy; 墙外楼 2019
+        </p>
+    </div>
+</footer>
+
+<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+</body>
+
+</html>

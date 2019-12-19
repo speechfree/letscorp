@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="../../post/index.xml">
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@SpeechFreedomCN">
+    <meta name="twitter:creator" content="@SpeechFreedomCN">
+    <meta name="og:title" content=" 吴松磊：如何科学地消灭敏感内容 | 墙外楼 " />
+    <meta name="og:description" content="回形针PaperClip
+中国网民第一次发现敏感词的存在，是在 2000 年的 qq 聊天室。
+用于结交陌生朋友的聊天室功能，让敏感内容第一次有了大规模传播的可能，因此，禁词表出现了。
+禁词表的规则相当粗暴——只要文本内容包含禁用词，则无法发送，或发送后仅自己可见。直到今天，微信也仍然沿用这一规则。
+好在微信环境相对封闭，审查级别并不高。多伦多大学一份 2016 年 11 月发布的报告中，只发现 178 个禁词，且仅针对用中国大陆手机号码。
+而在 web 2.0 时代，随着博客、论坛、社交网络开始成为主流产品，任何信息都有可能一夜间传遍全网。传统禁词方案的缺陷开始暴露出来。
+首先，词库只能做到精准匹配，无法处理对原词的演绎。
+假设金正恩为敏感词，那么可以演绎出三胖、鑫，以及英文、拼音、字符版本的几十个替代词，甚至直接用“金”以指代，而这些词显然无法被禁词表囊括。
+另一方面，许多敏感内容是事件，无法仅用单个词描述。
+以“金正男机场遇刺”为例，需要“机场”、“金正男”、“遇刺”其中两个词同时出现才能触发清除机制。这就给了其中单个词相当大的替换空间，例如“机场金大胖”、“胖熊机场一日游”，都可以让人联想到该事件。
+面对这些问题，各种消灭敏感内容的计算机算法开始被研究出来。
+分词是分析文本的第一步。
+传统的“正向最大匹配法”即从左到右扫描文本，将匹配成功的词切分，直到无法匹配为止。
+但这种方法并不可靠，如“一台独立服务器”就还是会被分为“一/台独/立/服务器”。
+为了解决歧义问题，需要对大量真实语料进行统计，计算每个词的出现概率，再计算不同分词方案下的总概率。
+在这个例子中，因为“立”作为词的出现概率极低，因此“一台/独立/服务器”的概率将明显高于“一/台独/立/服务器”。更进一步，还可计算两个词同时出现的概率，以得到更精确的分词结果。
+今天的分词算法可以成功识别插入特殊符号的敏感词。而配合扩展词表，也可以处理以同音字或拼音替代的敏感词。
+但对于联想类敏感词和事件类敏感内容，还是需要其他算法的加持。
+贝叶斯方法就是其中之一。
+1763 年，英国学者托马斯·贝叶斯（Thomas Bayes）提出了著名的贝叶斯公式：
+贝叶斯方法的核心在于通过已知事件的概率（先验概率）计算未知事件的概率（后验概率）。
+以“金正男机场遇刺”举例，假设抽取十万条包含“机场”的文本，其中七万条为正常内容，三万条为需要清除的敏感内容。
+即正常评论的概率 P(g)=70%，敏感评论的概率 P(b)=30%。
+再对所有文本进行分词，计算每个词出现的概率。
+以“遇刺”为例，假设在七万条正常内容中，有七十条“遇刺”，即出现概率概率 P(W|g)为 0.1%；而三万条敏感内容中，有三百条“遇刺”，即出现概率 P(W|b) 为 1%。“遇刺”一词出现的总概率 P(W) 为 0.37％。" />
+    <meta name="og:image"
+        content="https://opvlbqxurl.execute-api.ap-northeast-2.amazonaws.com/prod/random?keyword=programming&slug=吴松磊：如何科学地消灭敏感内容" />
+    <title> 吴松磊：如何科学地消灭敏感内容 | 墙外楼</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/css/blog.css" />
+    
+    <!-- plugins -->
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/bootstrap/bootstrap.min.css ">
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/themify-icons/themify-icons.css ">
+    
+
+</head>
+
+<body>
+
+    
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/">Home</a>
+        </div>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/post/index.xml">RSS</a>
+        </div>
+    </nav>
+    
+
+    
+    <section class="hero is-info is-medium">
+        <div class="hero-body" style="background-image: url(https://speechfree.github.io/letscorp/img/bg-blog.jpg);">
+            <div class="container has-text-centered">
+                <br>
+                <h1 class="title is-size-1">
+                    
+                    吴松磊：如何科学地消灭敏感内容
+                    
+                </h1>
+                
+            </div>
+        </div>
+    </section>
+
+<div class="container">
+    <div class="section">
+    
+
+<div class="columns">
+    <div class="column is-12">
+        <div class="tile is-child box">
+            
+
+            <div class="content">
+                <p>回形针PaperClip</p>
+
+<p>中国网民第一次发现敏感词的存在，是在 2000 年的 qq 聊天室。</p>
+
+<p>用于结交陌生朋友的聊天室功能，让敏感内容第一次有了大规模传播的可能，因此，禁词表出现了。</p>
+
+<p>禁词表的规则相当粗暴——只要文本内容包含禁用词，则无法发送，或发送后仅自己可见。直到今天，微信也仍然沿用这一规则。</p>
+
+<p>好在微信环境相对封闭，审查级别并不高。多伦多大学一份 2016 年 11 月发布的报告中，只发现 178 个禁词，且仅针对用中国大陆手机号码。</p>
+
+<p>而在 web 2.0 时代，随着博客、论坛、社交网络开始成为主流产品，任何信息都有可能一夜间传遍全网。传统禁词方案的缺陷开始暴露出来。</p>
+
+<p>首先，词库只能做到精准匹配，无法处理对原词的演绎。</p>
+
+<p>假设金正恩为敏感词，那么可以演绎出三胖、鑫，以及英文、拼音、字符版本的几十个替代词，甚至直接用“金”以指代，而这些词显然无法被禁词表囊括。</p>
+
+<p>另一方面，许多敏感内容是事件，无法仅用单个词描述。</p>
+
+<p>以“金正男机场遇刺”为例，需要“机场”、“金正男”、“遇刺”其中两个词同时出现才能触发清除机制。这就给了其中单个词相当大的替换空间，例如“机场金大胖”、“胖熊机场一日游”，都可以让人联想到该事件。</p>
+
+<p>面对这些问题，各种消灭敏感内容的计算机算法开始被研究出来。</p>
+
+<p>分词是分析文本的第一步。</p>
+
+<p>传统的“正向最大匹配法”即从左到右扫描文本，将匹配成功的词切分，直到无法匹配为止。</p>
+
+<p>但这种方法并不可靠，如“一台独立服务器”就还是会被分为“一/台独/立/服务器”。</p>
+
+<p>为了解决歧义问题，需要对大量真实语料进行统计，计算每个词的出现概率，再计算不同分词方案下的总概率。</p>
+
+<p>在这个例子中，因为“立”作为词的出现概率极低，因此“一台/独立/服务器”的概率将明显高于“一/台独/立/服务器”。更进一步，还可计算两个词同时出现的概率，以得到更精确的分词结果。</p>
+
+<p>今天的分词算法可以成功识别插入特殊符号的敏感词。而配合扩展词表，也可以处理以同音字或拼音替代的敏感词。</p>
+
+<p>但对于联想类敏感词和事件类敏感内容，还是需要其他算法的加持。</p>
+
+<p>贝叶斯方法就是其中之一。</p>
+
+<p>1763 年，英国学者托马斯·贝叶斯（Thomas Bayes）提出了著名的贝叶斯公式：</p>
+
+<p>贝叶斯方法的核心在于通过已知事件的概率（先验概率）计算未知事件的概率（后验概率）。</p>
+
+<p>以“金正男机场遇刺”举例，假设抽取十万条包含“机场”的文本，其中七万条为正常内容，三万条为需要清除的敏感内容。</p>
+
+<p>即正常评论的概率 P(g)=70%，敏感评论的概率 P(b)=30%。</p>
+
+<p>再对所有文本进行分词，计算每个词出现的概率。</p>
+
+<p>以“遇刺”为例，假设在七万条正常内容中，有七十条“遇刺”，即出现概率概率 P(W|g)为 0.1%；而三万条敏感内容中，有三百条“遇刺”，即出现概率 P(W|b) 为 1%。“遇刺”一词出现的总概率 P(W) 为 0.37％。</p>
+
+<p>那么，一条提到了机场的内容里出现了“遇刺”，该内容是敏感内容的概率 P(b|W) 是多大呢？将上面的结果带入贝叶斯公式中，可以算出概率为 P(b|W) = P(W|b)P(b) / P(W) = 81.1％。</p>
+
+<p>按此方法可以计算出每个词的敏感概率，根据这个公式就可以计算出该文本为敏感内容的期望，再根据实际情况设定阈值进行处理。</p>
+
+<p>以“金大胖在机场遇刺”为例，根据「金大胖」、「机场」和「遇刺」三个词的敏感概率，可计算出这句话是敏感内容的概率为 93.9％。</p>
+
+<p>贝叶斯方案的缺陷是需要大量语料数据作为其先验概率的支撑。但在深度学习算法逐渐成熟的今天，距离完全消灭敏感内容的最后屏障就是样本的数量。</p>
+
+<p>为了实现这一伟大目标，官方也许可以定期举办“敏感词放心说”等活动，号召人民群众一起为消灭敏感词贡献数据。</p>
+
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+    </div>
+</div>
+
+<footer class="footer has-background-grey-darker has-text-white">
+    <div class="content has-text-centered">
+        <p>
+            <br><br>
+            <br><br>
+            Copyright &copy; 墙外楼 2019
+        </p>
+    </div>
+</footer>
+
+<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+</body>
+
+</html>

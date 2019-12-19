@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="../../post/index.xml">
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@SpeechFreedomCN">
+    <meta name="twitter:creator" content="@SpeechFreedomCN">
+    <meta name="og:title" content=" 政治正确扩大化,Redis 作者被迫修改 master-slave 描述 | 墙外楼 " />
+    <meta name="og:description" content="相信在座各位的开发者都不会对 Redis 的主从模式(master-slave)感到陌生。Redis 中的主从模式事实上也是源自 MySQL 中同名的一个概念，是同步数据的一种手段。在这样的场景下，master-slave 本来是一个不带任何感情色彩的词语。
+然而有很多者却不这样认为，他们在阅读 Redis 5.0 RC5 的变更日志后发现，Redis 仍然在使用 “master” 和 “slave” 术语来在 Redis 的复制中区分不同的角色，他们对此感到失望，并希望 Redis 作者能修改 Redis 中 master-slave 架构的描述。
+按 Redis 作者 antirez 的说法，这已经不是开发者第一次提这种要求了。但这次呼吁修改的声音异常的大，就连 antirez 在推特发起的匿名投票也显示超过半数的人希望修改 master-slave 这一描述。
+antirez 表示他很抱歉 master-slave 这个描述让许多人感到失望，但他不认为这个特定于上下文环境的术语具有侵犯性。所以他在中使用 master-slave 当然不是以任何方式暗示“奴隶制度”。
+antirez 还表示，这个看似简单的修改实际上要付出昂贵的代价，并产生兼容性问题。例如：
+不能在应用现有的 PR
+现在有像 INFO 和 ROLE 这样的命令 —— 使用包含 slave 术语的协议进行回复" />
+    <meta name="og:image"
+        content="https://opvlbqxurl.execute-api.ap-northeast-2.amazonaws.com/prod/random?keyword=programming&slug=政治正确扩大化,Redis 作者被迫修改 master-slave 描述" />
+    <title> 政治正确扩大化,Redis 作者被迫修改 master-slave 描述 | 墙外楼</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-151212685-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/css/blog.css" />
+    
+    <!-- plugins -->
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/bootstrap/bootstrap.min.css ">
+    
+    <link rel="stylesheet" href="https://speechfree.github.io/letscorp/plugins/themify-icons/themify-icons.css ">
+    
+
+</head>
+
+<body>
+
+    
+    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/">Home</a>
+        </div>
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://speechfree.github.io/letscorp/post/index.xml">RSS</a>
+        </div>
+    </nav>
+    
+
+    
+    <section class="hero is-info is-medium">
+        <div class="hero-body" style="background-image: url(https://speechfree.github.io/letscorp/img/bg-blog.jpg);">
+            <div class="container has-text-centered">
+                <br>
+                <h1 class="title is-size-1">
+                    
+                    政治正确扩大化,Redis 作者被迫修改 master-slave 描述
+                    
+                </h1>
+                
+            </div>
+        </div>
+    </section>
+
+<div class="container">
+    <div class="section">
+    
+
+<div class="columns">
+    <div class="column is-12">
+        <div class="tile is-child box">
+            
+
+            <div class="content">
+                <p>相信在座各位的开发者都不会对 Redis 的主从模式(master-slave)感到陌生。Redis 中的主从模式事实上也是源自 MySQL 中同名的一个概念，是同步数据的一种手段。在这样的场景下，master-slave 本来是一个不带任何感情色彩的词语。</p>
+
+<p>然而有很多者却不这样认为，他们在阅读 Redis 5.0 RC5 的变更日志后发现，Redis 仍然在使用 “master” 和 “slave” 术语来在 Redis 的复制中区分不同的角色，他们对此感到失望，并希望 Redis 作者能修改 Redis 中 master-slave 架构的描述。</p>
+
+<p>按 Redis 作者 antirez 的说法，这已经不是开发者第一次提这种要求了。但这次呼吁修改的声音异常的大，就连 antirez 在推特发起的匿名投票也显示超过半数的人希望修改 master-slave 这一描述。</p>
+
+<p>antirez 表示他很抱歉 master-slave 这个描述让许多人感到失望，但他不认为这个特定于上下文环境的术语具有侵犯性。所以他在中使用 master-slave 当然不是以任何方式暗示“奴隶制度”。</p>
+
+<p>antirez 还表示，这个看似简单的修改实际上要付出昂贵的代价，并产生兼容性问题。例如：</p>
+
+<p>不能在应用现有的 PR</p>
+
+<p>现在有像 INFO 和 ROLE 这样的命令 —— 使用包含 slave 术语的协议进行回复</p>
+
+<p>术语 slave 中的源代码包含 1500 个事件</p>
+
+<p>拥有私人项目并根据需要进行代码合并的人会遇到很多问题</p>
+
+<p>可以看到，冒然进行变动会产生很多问题。而且，现在发布的 Redis 5 候选版本是向后兼容的首个稳定版本。所以这也是需要考虑的一方面。最后 antirez 表达了希望能折中解决问题的建议 ——</p>
+
+<p>短期内的变化：</p>
+
+<p>将 master-slave 架构的描述改为 master-replica</p>
+
+<p>为 SLAVEOF 提供别名 REPLICAOF，所以仍然可以使用 SLAVEOF，但多了一个选项</p>
+
+<p>保持继续使用 slave 来对 INFO 和 ROLE 进行回应，现在目前看来，这仍然是一个重大的破坏性变更</p>
+
+<p>长期变化</p>
+
+<p>编写一个 INFO 的替代品</p>
+
+<p>在内部替换很多东西，因为技术原因，如果作了改动，许多 PR 也会无法应用，所以必须在某些地方进行大变动</p>
+
+<p>……</p>
+
+<p>antirez 认为，这些所谓的“政治正确”并没有什么意义，他也在博客中表达了自己的政治倾向，他每天都会在社交网络积极谈论政治，以推动社会的平等。他希望拥有一个公平、机会财富再分配和开放的世界。但他认为获得这个世界的方式不是禁止言论，也不是通过在 Twitter 上讨伐别人 —— 只是为了让他人遵守你的意识形态。antirez 表示他将会继续自己的政治活动，也会继续编写开源软件。</p>
+
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+    </div>
+</div>
+
+<footer class="footer has-background-grey-darker has-text-white">
+    <div class="content has-text-centered">
+        <p>
+            <br><br>
+            <br><br>
+            Copyright &copy; 墙外楼 2019
+        </p>
+    </div>
+</footer>
+
+<script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+</body>
+
+</html>
